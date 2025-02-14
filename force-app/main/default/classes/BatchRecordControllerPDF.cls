@@ -44,7 +44,7 @@ public with sharing class BatchRecordControllerPDF {
     public void batchRecordData(){
         try{
             batchRecord = [SELECT Id, Name, Address_of_Consignee__c, CreatedDate , Name_and_Adress_of_Consignee__c, Mode_of_Transport__c, E_Way_Bill_No__c,
-            Transport_Name__c, Transporter_ID__c, Contact__r.Location__r.Name, Contact__r.Name, Terms_of_Delivery__c, River_GST__c, 
+                Transport_Name__c, Transporter_ID__c, Contact__r.Location__r.Name, Contact__r.Name, Terms_of_Delivery__c, River_GST__c, 
             Requestor_Name__c, Vehicle_No__c, Handover_Person_Store__c, Phone__c, Purpose__c, State_Code__c, Purpose_of_Sending__c
             FROM Create_Batch__c WHERE Id = :batchId LIMIT 1];
             System.debug('nameAddress ==>' +batchRecord.Contact__r.Location__r.Name);

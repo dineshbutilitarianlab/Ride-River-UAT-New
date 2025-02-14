@@ -15,11 +15,12 @@ public with sharing class ExceptionHelper {
                 exceptionLog.Timestamp__c = DateTime.now();
                 exceptionLog.Error_Line_No__c = Decimal.valueOf(expObj.getLineNumber());
                 exceptionLog.Error_Type__c = String.valueOf(expObj.getTypeName());
+                exceptionLog.Integration_Type__c = 'Apex Type';
                 String tempObj = expObj.getStackTraceString();
                 String[] stackTraceParts = tempObj.split(':')[0].split('\\.');
                 if (stackTraceParts.size() > 1) {
-                    exceptionLog.Class_Name__c = stackTraceParts[1];
-                    exceptionLog.Method_Name__c = stackTraceParts[2];
+                    exceptionLog.Class_Name__c = stackTraceParts[1] != null ? stackTraceParts[1] : '';
+                    exceptionLog.Method_Name__c = stackTraceParts[2] != null ? stackTraceParts[2] : '';
                     exceptionLog.Developer_Name__c = [SELECT CreatedBy.Name FROM ApexClass WHERE Name =:stackTraceParts[1] LIMIT 1].CreatedBy.Name;
                 }
                 insert exceptionLog;

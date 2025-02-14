@@ -2,7 +2,7 @@
  * @description       : 
  * @author            : ChangeMeIn@UserSettingsUnder.SFDoc
  * @group             : 
- * @last modified on  : 02-11-2025
+ * @last modified on  : 02-12-2025
  * @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
 **/
 Trigger OrderTrigger on Order (before insert, after update, after insert, before update) {
@@ -49,11 +49,12 @@ Trigger OrderTrigger on Order (before insert, after update, after insert, before
         OrderTriggerHandler.handleOrderUpdate(Trigger.new, Trigger.oldMap);
         OrderTriggerHandler.createProductTransferForBackOrder(Trigger.oldMap, Trigger.newMap);
         OrderTriggerHandler.afterUpdate(Trigger.new,Trigger.oldMap);
+        OrderTriggerHandler.sendWhatsAppAfterOrderCreation(Trigger.new,Trigger.oldMap);
         //OrderTriggerHandler.sendWhatsAppAfterOrderCreation(Trigger.new);
         
 
     }
     if(Trigger.isAfter && Trigger.isInsert){
-        OrderTriggerHandler.sendWhatsAppAfterOrderCreation(Trigger.new);
+        //OrderTriggerHandler.sendWhatsAppAfterOrderCreation(Trigger.new);
     }
 }

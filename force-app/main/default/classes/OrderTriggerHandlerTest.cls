@@ -103,8 +103,16 @@ public class OrderTriggerHandlerTest {
     
     @isTest
     static void testCreateProductTransfer() {
-        Account testAccount = new Account(Name = 'Test Account', Type = 'Customer');
+        
+       
+        Account testAccount = new Account(Name = 'Test Account', Type = 'Customer',Phone='0987654321');
         insert testAccount;
+       
+        
+       /* Contact con = new Contact(LastName ='Dinesh',Phone = '7834878789',AccountId = testAccount.id,location__c=l1.Id);
+        insert con;*/
+        
+       
         
         Product2 testProduct = new Product2(Name = 'Test Product', IsActive = true, ProductCode = 'LTIPK - 001', HSN_Code__c = 'qw12', Type__c= 'Merchandise');
         insert testProduct;
@@ -112,31 +120,38 @@ public class OrderTriggerHandlerTest {
         PricebookEntry testPricebookEntry = new PricebookEntry(Product2Id = testProduct.Id, Pricebook2Id = Test.getStandardPricebookId(), UnitPrice = 100.0, IsActive = true);
         insert testPricebookEntry;
         
-        Order testOrder = new Order(AccountId = testAccount.Id, Status = 'Back Order', EffectiveDate = Date.today(), Pricebook2Id = Test.getStandardPricebookId());
-        insert testOrder;
-        
-        ProductRequest testProductRequest = new ProductRequest(ShipmentType = 'VOR', Status = 'New');
-        insert testProductRequest;
-        
-        ProductRequestLineItem testLineItem = new ProductRequestLineItem(ParentId = testProductRequest.Id, Product2Id = testProduct.Id, QuantityRequested = 1);
-        insert testLineItem;
-        
-        testOrder.Purchase_Order__c = testProductRequest.Id;
-        update testOrder;
-        
         Schema.Location l1 = new Schema.Location(); 
         l1.Name = 'Warehouse 1';
         l1.LocationType = 'Secondary';
         l1.IsInventoryLocation = true;
+        l1.Account__c=testAccount.Id;
+        l1.Price_Book__c= Test.getStandardPricebookId();
         insert l1;
         
+        Order testOrder = new Order(AccountId = testAccount.Id, Status = 'Back Order', EffectiveDate = Date.today(), Pricebook2Id = Test.getStandardPricebookId());
+        insert testOrder;
+        
+        
+        ProductRequest testProductRequest = new ProductRequest(ShipmentType = 'VOR', Status = 'Processing', DestinationLocationId=l1.Id);
+        insert testProductRequest;
+        
+        ProductRequestLineItem testLineItem = new ProductRequestLineItem(ParentId = testProductRequest.Id, Product2Id = testProduct.Id, QuantityRequested = 1,Price_Book__c=Test.getStandardPricebookId());
+        insert testLineItem;
+                
         ProductItem testProductItem = new ProductItem(Product2Id = testProduct.Id, LocationId = l1.Id, QuantityOnHand =123); 
         insert testProductItem;
         
         OrderItem testOrderItem = new OrderItem(OrderId = testOrder.Id, Product2Id = testProduct.Id, Quantity = 1, PricebookEntryId = testPricebookEntry.Id, UnitPrice = 123);
         insert testOrderItem;
         
+        OrderItem testOrderItem2 = new OrderItem(OrderId = testOrder.Id, Product2Id = testProduct.Id, Quantity = 2, PricebookEntryId = testPricebookEntry.Id, UnitPrice = 121);
+        insert testOrderItem2;
+        
+        testOrder.Purchase_Order__c = testProductRequest.Id;
+        update testOrder;
+        
         Test.startTest();
+        
         
         testOrder.Status = 'Activated';
         update testOrder;
@@ -221,6 +236,8 @@ public class OrderTriggerHandlerTest {
         Test.setMock(HttpCalloutMock.class, new HttpCalloutMockImpl());
         
         Test.startTest();
+        oldOrder.Booking_Form_File_URL__c='updated.pdf';
+        update oldOrder;
         oldOrder.Status = 'Allotment in Process'; 
         update oldOrder;
         oldOrder.Status='RTO Registration';

@@ -514,6 +514,7 @@ public class ProductRequestLineController {
 
             List<Discrepancy__c> discrepanciesToInsert = new List<Discrepancy__c>();
             Map<String, Id> discrepancyIdMap = new Map<String, Id>();
+            Map<Id, Decimal> discrepancyReceivedQuantityMap = new Map<Id, Decimal>();
 
             for (String shipmentItemId : updatedItemsMap.keySet()) {
                 if (String.isEmpty(shipmentItemId)) {
@@ -527,7 +528,8 @@ public class ProductRequestLineController {
                 if (itemDetails instanceof Map<String, Object>) {
                     Map<String, Object> itemData = (Map<String, Object>) itemDetails;
                     if (itemData.containsKey('RecievedQuantity')) {
-                        disRec.Received_Quantity__c = Integer.valueOf(String.valueOf(itemData.get('RecievedQuantity')));
+                        Integer receivedQty = Integer.valueOf(String.valueOf(itemData.get('RecievedQuantity')));
+                        disRec.Received_Quantity__c = receivedQty;
                     }
                 }
                 discrepanciesToInsert.add(disRec);
@@ -537,6 +539,7 @@ public class ProductRequestLineController {
                 insert discrepanciesToInsert;
                 for (Discrepancy__c disRec : discrepanciesToInsert) {
                     discrepancyIdMap.put(disRec.Shipment_Item__c, disRec.Id);
+                    discrepancyReceivedQuantityMap.put(disRec.Id, disRec.Received_Quantity__c);
                 }
             } else {
                 System.debug('🚨 No Discrepancy__c records were created!');
@@ -559,7 +562,6 @@ public class ProductRequestLineController {
 
             List<Discrepancy_Line_Item__c> disLineItemsToInsert = new List<Discrepancy_Line_Item__c>();
 
-            // Create Discrepancy Line Items
             for (String shipmentItemId : updatedItemsMap.keySet()) {
                 Object recValue = updatedItemsMap.get(shipmentItemId);
                 System.debug('🔍 Processing shipmentItemId: ' + shipmentItemId + ' | Data: ' + recValue);
@@ -572,12 +574,23 @@ public class ProductRequestLineController {
                 }
             }
 
-            // Insert Discrepancy_Line_Item__c records
             if (!disLineItemsToInsert.isEmpty()) {
                 insert disLineItemsToInsert;
                 System.debug('✅ Successfully inserted Discrepancy_Line_Item__c records: ' + disLineItemsToInsert);
             } else {
                 System.debug('🚨 No new Discrepancy_Line_Item__c records were created!');
+            }
+
+            // Updating Discrepancy__c records with Received Quantity
+            List<Discrepancy__c> discrepanciesToUpdate = new List<Discrepancy__c>();
+            for (Id disId : discrepancyReceivedQuantityMap.keySet()) {
+                Discrepancy__c dis = new Discrepancy__c(Id = disId, Received_Quantity__c = discrepancyReceivedQuantityMap.get(disId));
+                discrepanciesToUpdate.add(dis);
+            }
+
+            if (!discrepanciesToUpdate.isEmpty()) {
+                update discrepanciesToUpdate;
+                System.debug('✅ Updated Discrepancy__c records with Received Quantity.');
             }
 
             return 'SUCCESS';
@@ -612,11 +625,7 @@ public class ProductRequestLineController {
                         lineItem.Discrepancy__c = discrepancyId;
                         lineItem.Quantity__c = quantity;
                         lineItem.Type__c = fieldName;
-                        if(data.containsKey('RecievedQuantity')){
-                            lineItem.Discrepancy__r.Received_Quantity__c = Integer.valueOf(data.get('RecievedQuantity'));
-                        }
                         lineItem.status__c = 'Draft';
-
                         disLineItemsToInsert.add(lineItem);
                     }
                 } catch (Exception e) {
@@ -625,6 +634,7 @@ public class ProductRequestLineController {
             }
         }
     }
+
 
     
     // ===============================================================================================================================================================================================================     

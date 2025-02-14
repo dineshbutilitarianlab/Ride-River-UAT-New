@@ -1,0 +1,22 @@
+.custom-combobox {
+    width: 100%;
+    
+}
+/* .custom-combobox:hover {
+    transform: scale(1.05);
+} */
+.custom-input {
+    width: 80%;
+}
+.button-container {
+    margin-top: 20px;
+}
+.animated-button {
+    transition: all 0.3s ease-in-out;
+}
+.animated-button:hover {
+    transform: scale(1.1);
+}
+.full-width-input {
+    width: 100%;
+}

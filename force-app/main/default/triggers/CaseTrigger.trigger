@@ -11,5 +11,6 @@ trigger CaseTrigger on Case (before insert, before Update,after Insert,after upd
     }
     if(trigger.isAfter && trigger.isUpdate){
         CaseTriggerHandler.createTaskForCaseOwnerWhenCaseClosed(trigger.new);
+        CaseTriggerHandler.fireEmailBasedOnCaseTypeAndItsStages(trigger.new);
     }
 }

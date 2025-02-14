@@ -1,3 +1,10 @@
+/**
+ * @description       : 
+ * @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+ * @group             : 
+ * @last modified on  : 02-13-2025
+ * @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+**/
 public class AttachmentHandlerClass {
     
     @Future (callout=true)
@@ -285,6 +292,8 @@ public class AttachmentHandlerClass {
             list<Order_Payment__c>lstOrderPayments=[SELECT name,Payments__r.Payment_Status__c,Order__r.Id FROM Order_Payment__c  WHERE Id=:OrderpaymentId];
             List<Attachment> attachmentsToInsert = new List<Attachment>();
             
+            List<Order_Payment__c> orderPaymentToUpdate = new List<Order_Payment__c>();//added by Aniket
+
             for(Order_Payment__c obj :lstOrderPayments){
                 if(obj.Payments__r.Payment_Status__c=='Success'){
                     PageReference pdfPage1 = Page.CreateReceiptPayments; 
@@ -292,6 +301,9 @@ public class AttachmentHandlerClass {
                     Blob pdfBlob1;
                     if (!Test.isRunningTest()) {
                         pdfBlob1= pdfPage1.getContentAsPDF();
+                        obj.Payment_Acknowledgement_Generated__c=true;//added By Aniket
+                        orderPaymentToUpdate.add(obj);
+
                     } else {
                         pdfBlob1 = Blob.valueOf('Test');
                     }
@@ -311,11 +323,15 @@ public class AttachmentHandlerClass {
                 insert attachmentsToInsert;
                 SendEmailHandller.sendPreAttchamnets(lstOrderPayments[0].Id,attachmentsToInsert); 
             }
+            if(!orderPaymentToUpdate.isEmpty()){ //added By Aniket
+                update orderPaymentToUpdate;//added By Aniket
+            }
         }catch (Exception e) {
             System.debug('Exception occurred: ' + e.getMessage());
         }
         
     }
+   
     
     Public class myexception extends exception{}
 }

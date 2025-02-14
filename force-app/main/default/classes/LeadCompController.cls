@@ -92,7 +92,7 @@ public with sharing class LeadCompController {
     
         // Fetch Follow-Ups for these Leads within the specified date range
         List<Follow_Up__c> followUps = [SELECT Id, Due_Date__c, Lead__c, Lead__r.Name, Lead__r.Phone, 
-                                               Status__c, Subject__c, Lead__r.Lead_Age__c, 
+                                               Status__c, Subject__c, Lead__r.Lead_Age__c,Follow_Up_Date__c, 
                                                Follow_Up__c, Previous_Followup_date__c, 
                                                Previous_Feedback__c, Feedback__c 
                                         FROM Follow_Up__c 
@@ -387,22 +387,35 @@ insert newfollowup;
         System.debug('Converted startDatetime: ' + startDatetime);
         System.debug('Converted endDatetime: ' + endDatetime);
     
-        // Fetching test drive records where action is not completed
-        List<Test_Drive__c> lsttestactionfalse = [
-            SELECT Id, Name, MobilePhone__c, Lead__c, Lead__r.Name, Test_Drive_Date__c, Is_Reschedule__c, 
-                   Ride_Type__c, Phone__c, Reschedule_Date__c, Test_Ride_Date__c, Test_Drive_Status__c, 
-                   Start_Date__c, End_Date__c, Lead__r.Lead_Age__c, Drivers_License_Number__c, Indemnity__c
-            FROM Test_Drive__c 
-            WHERE Lead__r.isConverted = false 
-            AND Test_Drive_Status__c != 'Canceled' 
-            AND Test_Drive_Status__c != 'Completed'  
-            AND Lead__r.Status != 'close lost' 
-            AND isAcctionCompleted__c = FALSE 
-            AND ((Test_Ride_Date__c = TODAY AND Test_Drive_Status__c = 'Scheduled') 
-            OR (Reschedule_Date__c = TODAY AND Test_Drive_Status__c = 'Reschedule'))  
-            ORDER BY CreatedDate DESC
-        ];
-        System.debug('Total lsttestactionfalse records: ' + lsttestactionfalse.size());
+        User currentUser = [SELECT Id FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+    
+        // Collect unique Lead IDs
+        // Set<Id> setLeadID = new Set<Id>();
+        // for (Test_Drive__c objTest : newList) {
+        //     if (objTest.Lead__c != null) {
+        //         setLeadID.add(objTest.Lead__c);
+        //     }
+        // }
+        // System.debug('Collected Lead IDs: ' + setLeadID);
+    
+        // Fetch related Lead records
+        List<Lead> lstLead = [ SELECT Id,OwnerId, Name, Phone, LeadSource, Lead_Age__c 
+                FROM Lead 
+                WHERE OwnerId = :currentUser.Id 
+                AND IsConverted = false 
+                AND Status != 'close lost' 
+            ];
+        
+            if (lstLead.isEmpty()) {
+                System.debug('No leads found, returning empty leadWrapper.');
+                return new leadWrapper(); // Return empty wrapper if no leads found
+            }
+
+            Set<Id> leadIds = new Set<Id>();
+            for (Lead lead : lstLead) {
+                leadIds.add(lead.Id);
+            }
+
     
         // Query to get test drives within the date range
         List<Test_Drive__c> newList = [
@@ -410,7 +423,8 @@ insert newfollowup;
                    Ride_Type__c, Phone__c, Reschedule_Date__c, Test_Ride_Date__c, Test_Drive_Status__c, 
                    Start_Date__c, End_Date__c, Lead__r.Lead_Age__c, Drivers_License_Number__c, Indemnity__c
             FROM Test_Drive__c 
-            WHERE Lead__r.isConverted = false 
+            WHERE Lead__c IN :leadIds
+            AND Lead__r.isConverted = false 
             AND Lead__r.Status != 'close lost'
             AND Lead__r.Status = 'Test Ride' 
             AND Test_Ride_Date__c >= :startDatetime 
@@ -427,7 +441,8 @@ insert newfollowup;
                        Ride_Type__c, Phone__c, Reschedule_Date__c, Test_Drive_Status__c, Start_Date__c, 
                        End_Date__c, Lead__r.Lead_Age__c, Drivers_License_Number__c, Indemnity__c, Test_Ride_Date__c
                 FROM Test_Drive__c 
-                WHERE Lead__r.isConverted = false 
+                WHERE Lead__c IN :leadIds
+                AND Lead__r.isConverted = false 
                 AND Lead__r.Status != 'close lost' 
                 AND Test_Ride_Date__c >= :startDatetime 
                 AND Test_Ride_Date__c <= :endDatetime 
@@ -435,30 +450,7 @@ insert newfollowup;
             ];
             System.debug('Total newList records (fallback query): ' + newList.size());
         }
-    
-        // Collect unique Lead IDs
-        Set<Id> setLeadID = new Set<Id>();
-        for (Test_Drive__c objTest : newList) {
-            if (objTest.Lead__c != null) {
-                setLeadID.add(objTest.Lead__c);
-            }
-        }
-        System.debug('Collected Lead IDs: ' + setLeadID);
-    
-        // Fetch related Lead records
-        List<Lead> lstLead = new List<Lead>();
-        if (!setLeadID.isEmpty()) {
-            lstLead = [
-                SELECT Id, Name, Phone, LeadSource, Lead_Age__c 
-                FROM Lead 
-                WHERE Id IN :setLeadID 
-                AND IsConverted = false 
-                AND Status != 'close lost' 
-                AND Lead_Age__c <= 21
-            ];
-        }
-        System.debug('Total lstLead records: ' + lstLead.size());
-    
+        
         // Creating response wrapper
         leadWrapper objWrapper = new leadWrapper();
         objWrapper.lstTestRide = newList;

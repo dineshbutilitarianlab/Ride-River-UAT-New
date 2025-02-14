@@ -1,0 +1,114 @@
+<template>
+    <lightning-card title="Add Supporting Media" icon-name="standard:record">
+        <div class="slds-m-around_medium">
+
+            <template if:true={lineItems}>
+                <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                    <thead>
+                        <tr>
+                            <th>Discrepancy Line Item</th>
+                            <th>Add Supporting Media</th>
+                            <template if:true={SpareUser}>
+                                <th>Approve</th>
+                                <th>Reject</th>
+                                <th>Feedback</th>
+                            </template>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={lineItems} for:item="item">
+                            <tr key={item.Id}>
+                                <td>{item.Name}</td>
+                                <td>
+                                    <lightning-input 
+                                        type="text" 
+                                        data-id={item.Id} 
+                                        value={item.Supporting_Media__c}
+                                        onchange={handleInputChange}>
+                                    </lightning-input>
+                                </td>
+                                <template if:true={SpareUser}>
+                                    <td>
+                                        <template if:true={item.onLoadSpare}>
+                                            <lightning-icon 
+                                                icon-name="utility:check" 
+                                                alternative-text="Approve"
+                                                data-id={item.Id} 
+                                                name="spareApprove" 
+                                                title="Approve"
+                                                onclick={iconClicked}>
+                                            </lightning-icon>
+                                        </template>
+                                        <template if:true={item.SpareOnApprove}>
+                                            <lightning-icon 
+                                                icon-name="action:approval" 
+                                                alternative-text="Approved"
+                                                data-id={item.Id} 
+                                                name="sparesApprove" 
+                                                title="Approved"
+                                                onclick={iconClicked}>
+                                            </lightning-icon>
+                                        </template>
+                                    </td>
+                                    <td>
+                                        <template if:true={item.onLoadReject}>
+                                            <lightning-icon 
+                                                icon-name="utility:close" 
+                                                alternative-text="Reject"
+                                                data-id={item.Id} 
+                                                name="spareReject" 
+                                                title="Reject"
+                                                onclick={iconClicked}>
+                                            </lightning-icon>
+                                        </template>
+                                        <template if:true={item.SpareOnReject}>
+                                            <lightning-icon 
+                                                icon-name="action:reject" 
+                                                alternative-text="Rejected"
+                                                data-id={item.Id} 
+                                                name="sparesReject" 
+                                                title="Rejected"
+                                                onclick={iconClicked}>
+                                            </lightning-icon>
+                                        </template>
+                                    </td>
+                                    <td>
+                                        <template if:true={item.showFeedback}>
+                                            <lightning-input 
+                                                type="text" 
+                                                placeholder="Enter feedback"
+                                                data-id={item.Id} 
+                                                value={item.feedback}
+                                                onchange={handleFeedbackChange}>
+                                            </lightning-input>
+                                        </template>
+                                    </td>
+                                </template>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            
+                <div style="text-align: center; margin-top: 20px">
+                    <lightning-button 
+                        label="Cancel" 
+                        variant="destructive" 
+                        onclick={handleExit}
+                        class="slds-m-left_x-small">
+                    </lightning-button>
+                    <lightning-button 
+                        label="Update Line Items" 
+                        variant="brand" 
+                        onclick={handleAddSupportingMedia}
+                        class="slds-m-left_x-small">
+                    </lightning-button>
+                </div>
+            </template>
+
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading..." size="small"></lightning-spinner>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

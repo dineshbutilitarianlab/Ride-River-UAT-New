@@ -1,3 +1,10 @@
+/**
+ * @description       : 
+ * @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+ * @group             : 
+ * @last modified on  : 02-12-2025
+ * @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+**/
 trigger OrderPaymentTrigger on Order_Payment__c (before insert, before update, after update, after insert) {
      
     If(trigger.isBefore){ 
@@ -17,10 +24,13 @@ trigger OrderPaymentTrigger on Order_Payment__c (before insert, before update, a
             
             OrderPaymentTriggerHandler.updateOrderOnInsert(trigger.new);
             OrderStatusHandler.sendPreOrderReceipt01(trigger.new); 
+            //new on 12/02/2025
+            
         }
         
         If(trigger.isUpdate){
             OrderPaymentTriggerHandler.updateOrderOnUpdate(trigger.new, trigger.oldMap);
+            OrderPaymentTriggerHandler.populatePDFInOrder(trigger.new,Trigger.oldMap);
         }
     }
 

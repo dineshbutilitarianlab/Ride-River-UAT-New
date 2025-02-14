@@ -238,5 +238,57 @@ public class OrderPaymentTriggerHandler {
         }
         
     }
-    
+    //methood added by Aniket on 12/02/2025
+    public static void populatePDFInOrder(List<Order_Payment__c> newpaymentList,Map<Id,Order_Payment__c> oldPaymentMap){
+        try{
+            Set<Id> orderIdsToFetchorder = new Set<Id>();
+            Set<Id> orderPaymentIds = new Set<Id>();
+            
+            for(Order_Payment__c op : newpaymentList){
+                if(op.Payment_Acknowledgement_Generated__c == true && oldPaymentMap.get(op.Id).Payment_Acknowledgement_Generated__c == false){
+                    orderPaymentIds.add(op.Id);
+                    orderIdsToFetchorder.add(op.Order__c);
+                }
+                
+            }
+            Attachment att = [SELECT Id, Name, Body, ParentId FROM Attachment WHERE ParentId IN:orderPaymentIds Order By CreatedDate Desc LIMIT 1];
+            System.debug('Its Coming upto here');
+            System.debug('Attachment ===>'+att);
+            
+            ContentVersion cv = new ContentVersion();
+                cv.Title = att.Name;  
+                cv.PathOnClient = att.Name + '.pdf';  
+                cv.VersionData = att.Body;
+                cv.FirstPublishLocationId = att.ParentId;  
+                insert cv;
+                system.debug('cv ===> ' + cv);
+
+                ContentVersion insertedCV = [SELECT Id, ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id LIMIT 1];
+                system.debug('insertedCV ===> ' + insertedCV);
+
+                ContentDistribution cd = new ContentDistribution();
+                cd.PreferencesAllowOriginalDownload = true;
+                cd.PreferencesLinkLatestVersion = true;
+                cd.Name = 'test';
+                cd.ContentVersionId = insertedCV.Id;
+                insert cd;
+                system.debug('cd ===> ' + cd);
+
+                ContentDistribution cdl = [SELECT Id,ContentDownloadUrl,DistributionPublicUrl FROM ContentDistribution WHERE Id = :cd.Id LIMIT 1];
+                System.debug('Public Link: ' + cdl);
+                System.debug('Public ContentDownloadUrl: ' + cdl.ContentDownloadUrl);
+                System.debug('Public DistributionPublicUrl: ' + cdl.DistributionPublicUrl);
+
+                Order orderToUpdate = [Select id,Booking_Form_File_URL__c from Order Where Id IN:orderIdsToFetchorder LIMIT 1];
+                orderToUpdate.Booking_Form_File_URL__c=cdl.ContentDownloadUrl;
+                //orderToUpdate.Allotment_In_Process_File_URL__c=cdl.ContentDownloadUrl;
+                update orderToUpdate;
+
+        }
+        catch(Exception e){
+            System.debug('Error is ===>'+e.getMessage());
+            System.debug('Error Line Number===>'+e.getLineNumber());
+        }
+
+    }
 }

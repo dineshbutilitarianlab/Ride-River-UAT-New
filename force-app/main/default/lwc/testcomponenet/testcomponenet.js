@@ -305,7 +305,7 @@ export default class Testcomponenet extends NavigationMixin(LightningElement) {
         },
         { label: 'Mobile', fieldName: 'Phone__c' },
         { label: 'Type', fieldName: 'Follow_Up__c' },
-        // { label: 'Follow-Up Date', fieldName: 'FollowupDate', type: 'date' },
+        { label: 'Follow-Up Date', fieldName: 'FollowupDate', type: 'date' },
         // { label: 'Subject', fieldName: 'Subject', type: 'Text' },
         //  { label: 'Lead Age', fieldName: 'Lead_Age__c' },
         { label: 'Previous follow up date', fieldName: 'Previous_Followup_date__c', type: 'datetime' },
@@ -352,10 +352,20 @@ export default class Testcomponenet extends NavigationMixin(LightningElement) {
             initialWidth: 150
         },
         {
-            label: 'Lead Age',
-            fieldName: 'Lead_Age__c',
+            label: 'Schedule Date',
+            fieldName: 'Test_Ride_Date__c',
             initialWidth: 100
         },
+        // {
+        //     label: 'Lead Age',
+        //     fieldName: 'Lead_Age__c',
+        //     initialWidth: 100
+        // },
+        // {
+        //     label: 'Reschedule Date',
+        //     fieldName: 'Reschedule_Date__c',
+        //     initialWidth: 100
+        // },
         {
             label: 'Time',
             fieldName: 'TestRideTime',
@@ -587,10 +597,7 @@ export default class Testcomponenet extends NavigationMixin(LightningElement) {
 
     filterTestRides() {
         debugger;
-        // if (!this.fromDate || !this.toDate) {
-        //     alert('Please select both From Date and To Date.');
-        //     return;
-        // }
+ 
 
         this.btestRideRecordFound = true;
         this.getFgetTestRidesdetails(this.fromDate, this.toDate);
@@ -782,6 +789,8 @@ export default class Testcomponenet extends NavigationMixin(LightningElement) {
                             Ride_Type__c: valueArr[i].Ride_Type__c ? valueArr[i].Ride_Type__c : '',
                             Lead_Age__c: valueArr[i].Lead__c ? valueArr[i].Lead__r?.Lead_Age__c ||'' : '',
                             //  datandtime: valueArr[i].Test_Drive_Date__c ? valueArr[i].Test_Drive_Date__c : '',
+                            Test_Ride_Date__c: this.followupconvertToIST(valueArr[i].Test_Ride_Date__c),
+                            Reschedule_Date__c: this.followupconvertToIST(valueArr[i].Reschedule_Date__c),
                             Indemnity__c: valueArr[i].Indemnity__c ? valueArr[i].Indemnity__c : '',
                             Drivers_License_Number__c: valueArr[i].Drivers_License_Number__c ? valueArr[i].Drivers_License_Number__c : '',
                             TestRideTime: this.convertToIST(valueArr[i].Test_Ride_Date__c),

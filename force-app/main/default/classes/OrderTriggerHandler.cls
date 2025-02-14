@@ -116,11 +116,11 @@ public without sharing class OrderTriggerHandler {
         }
         
         // Query Purchase Orders and their Line Items
-        Map<Id, ProductRequest> purchaseOrderMap = new Map<Id, ProductRequest>(
-            [SELECT Id, DestinationLocationId,
-             (SELECT Id, QuantityRequested, Product2Id FROM ProductRequestLineItems)
-             FROM ProductRequest WHERE Id IN :purchaseOrderIds]
-        );
+        Map<Id, ProductRequest> purchaseOrderMap = new Map<Id, ProductRequest>([SELECT Id, DestinationLocationId, (SELECT Id, QuantityRequested, Product2Id FROM ProductRequestLineItems) FROM ProductRequest WHERE Id IN :purchaseOrderIds]);
+        
+        System.debug('purchaseOrderMap===>'+purchaseOrderMap);
+        
+        
         
         // Query Order Items
         Map<Id, List<OrderItem>> orderItemsMap = new Map<Id, List<OrderItem>>();
@@ -144,11 +144,7 @@ public without sharing class OrderTriggerHandler {
         }
         
         Map<Id, ProductItem> productItemMap = new Map<Id, ProductItem>();
-        for (ProductItem pi : [
-            SELECT Id, Product2Id, LocationId
-            FROM ProductItem
-            WHERE Product2Id IN :product2Ids AND LocationId IN :destinationLocationIds
-        ]) {
+        for (ProductItem pi : [ SELECT Id, Product2Id, LocationId FROM ProductItem WHERE Product2Id IN :product2Ids AND LocationId IN :destinationLocationIds]) {
             productItemMap.put(pi.Product2Id, pi);
         }
         
@@ -332,7 +328,7 @@ public without sharing class OrderTriggerHandler {
                                         wrapperForAllotment w2 = new wrapperForAllotment();
                                         w2.phoneNumber=o.Phone__c;
                                         w2.allotMentFileLinks=o.Allotment_In_Process_File_URL__c;
-                                        w2.fileName= accountIdToNameMap.containsKey(o.AccountId) ?  accountIdToNameMap.get(o.AccountId)+ 'allotment' : '';
+                                        w2.fileName= accountIdToNameMap.containsKey(o.AccountId) ?  accountIdToNameMap.get(o.AccountId)+ '_Allotment' : '';
                                         toPassToQueueable.put(o.Id,w2);
                                     }  
                                 }
@@ -394,14 +390,14 @@ public without sharing class OrderTriggerHandler {
         }
     }
     //code added by Aniket on 11/02/2025
-    public static void sendWhatsAppAfterOrderCreation(List<Order> newOrderList){
+    public static void sendWhatsAppAfterOrderCreation(List<Order> newOrderList,Map<Id,Order> oldOrderMap){
         try{
             List<Id> orderIdsToProcess = new List<Id>();
             Set<Id> orderIdsToGet = new Set<Id>();
             Map<Id,String> orderToProductColor = new Map<Id,String>();
             Map<Id,wrapperForBooking> toPassToQueueable = new Map<Id,wrapperForBooking>();
             for(Order o : newOrderList){
-                if(o.RecordTypeId == vehicleRecordTypeId && o.AccountId !=null && o.Assigned_Vehicle__c != null ){
+                if(o.RecordTypeId == vehicleRecordTypeId && o.AccountId !=null && o.Assigned_Vehicle__c != null && o.Booking_Form_File_URL__c != oldOrderMap.get(o.Id).Booking_Form_File_URL__c){
                     orderIdsToGet.add(o.Id);
                     
                 }
@@ -420,7 +416,7 @@ public without sharing class OrderTriggerHandler {
                     w.bookingId = order.Website_Order_Id__c;
                     w.color = order.Assigned_Vehicle__r.Colour__c;
                     w.pdfLink = order.Booking_Form_File_URL__c;
-                    w.fileName = order.Account.Name + 'receipt';
+                    w.fileName = order.Account.Name + '_Receipt';
                     toPassToQueueable.put(order.Id,w);
                  }
             }
